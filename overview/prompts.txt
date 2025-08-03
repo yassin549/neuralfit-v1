@@ -1,0 +1,248 @@
+Below is a polished set of **15 AI-assisted “Cascade” prompts**, each in a professional format. Copy & paste each into your AI code editor to generate production-ready code, configs, and documentation. Each prompt includes:
+
+* **Role**: Who the AI “is”
+* **Vision**: What success looks like
+* **Deliverables**: Exact artifacts you expect
+
+---
+
+### 1. Scaffold Monorepo & Tooling
+
+```markdown
+You’re a senior full-stack architect.  
+**Vision:** A clean, pnpm-based monorepo foundation for all NeuralFit services.  
+**Deliverables:**  
+- `pnpm-workspace.yaml`  
+- Top-level `package.json`  
+- Folders: `apps/frontend`, `apps/backend`, `apps/ai`, `infra`, `docs`, `tests`  
+- Config files: `.eslintrc.js`, `.prettierrc`, `.editorconfig`
+
+“Generate code and configuration to initialize this monorepo exactly as specified—no extraneous dependencies or files.”  
+```
+
+---
+
+### 2. Initialize Git & CI/CD
+
+```markdown
+You’re a DevOps engineer with 5+ years of CI/CD expertise.  
+**Vision:** Every push triggers linting and tests.  
+**Deliverables:**  
+- A Git repo initialized in root  
+- `.github/workflows/ci.yml` running `pnpm install`, `pnpm lint`, `pnpm test` on pushes to `main`  
+- A stub `infra/docker/docker-compose.yml` for local development
+
+“Provide only the YAML and Docker Compose stub—ensure syntax is valid and minimal.”  
+```
+
+---
+
+### 3. Terraform Infrastructure Stubs
+
+```markdown
+You’re a cloud infrastructure lead.  
+**Vision:** Reusable Terraform modules for networking and data services.  
+**Deliverables:**  
+- `infra/terraform/modules/vpc/main.tf` with VPC and subnets  
+- `infra/terraform/modules/postgres/main.tf` for managed Postgres  
+- `infra/terraform/modules/redis/main.tf` for a Redis cluster  
+- Corresponding `variables.tf` and `outputs.tf` for each module
+
+“Generate complete module skeletons with placeholders for credentials and regions.”  
+```
+
+---
+
+### 4. Next.js Frontend Setup
+
+```markdown
+You’re a senior front-end engineer.  
+**Vision:** A Next.js TypeScript app with Tailwind, ShadCN/UI, Framer Motion, and Clerk auth.  
+**Deliverables:**  
+- `apps/frontend/` bootstrapped via `create-next-app --typescript --app`  
+- Installed and configured: `tailwind.config.js`, `postcss.config.js`  
+- `shadcn/ui` setup and example Card component  
+- Clerk integration in `_app.tsx`  
+- `tsconfig.json` with path aliases for `@/components` and `@/utils`
+
+“Provide all code snippets, package.json dependencies, and necessary config files.”  
+```
+
+---
+
+### 5. Global Layout & Theme
+
+```markdown
+You’re a UI/UX engineer focused on design systems.  
+**Vision:** Consistent layout with theme-toggle.  
+**Deliverables:**  
+- `components/Layout.tsx` with Navbar and Footer  
+- Theme context in `context/ThemeContext.tsx`  
+- Tailwind theme config for dark/light modes  
+- Example usage in a page
+
+“Generate React + Tailwind code, ensuring accessibility (ARIA) and responsive design.”  
+```
+
+---
+
+### 6. Landing Split-Screen Page
+
+```markdown
+You’re a front-end developer expert in animations.  
+**Vision:** Engaging split-screen landing page with fade-in panels.  
+**Deliverables:**  
+- Next.js page at `pages/index.tsx`  
+- Left panel: title “Talk to the AI Therapist”  
+- Right panel: title “Join a Social Space”  
+- Framer Motion fade-in on mount  
+- Tailwind CSS styling
+
+“Output complete page code and import statements—no omissions.”  
+```
+
+---
+
+### 7. Backend API Boilerplate
+
+```markdown
+You’re a backend architect.  
+**Vision:** A Fastify TypeScript service with health checks.  
+**Deliverables:**  
+- `apps/backend/src/index.ts` initializing Fastify  
+- CORS and `dotenv` setup  
+- `/healthz` route returning 200 status  
+- Directory structure: `routes/`, `plugins/`, `utils/`
+
+“Provide code with JSDoc comments and typings—ready to extend.”  
+```
+
+---
+
+### 8. AI Chat Endpoint
+
+```markdown
+You’re a Python/Node microservices expert.  
+**Vision:** Reliable `/api/ai/message` proxy to Hugging Face.  
+**Deliverables:**  
+- Route handler for POST `{ sessionId, message }`  
+- HTTP client integration for `TheBloke/MelloGPT-GGUF` inference  
+- Logging of request/response with timestamp  
+- Proper error handling and status codes
+
+“Include sample env var usage and minimal dependencies (axios or fetch).”  
+```
+
+---
+
+### 9. Chat UI Component
+
+```markdown
+You’re a React component specialist.  
+**Vision:** A user-friendly chat window for text messaging.  
+**Deliverables:**  
+- `components/ChatWindow.tsx`  
+- Scrollable message list distinguishing user vs. AI bubbles  
+- Text input, send button, state management hooks  
+- API call to `/api/ai/message`
+
+“Generate fully typed React + Tailwind code and hook logic.”  
+```
+
+---
+
+### 10. Session Memory with Redis
+
+```markdown
+You’re a caching and performance engineer.  
+**Vision:** Chat context persisted in Redis.  
+**Deliverables:**  
+- Redis client setup in `backend/src/utils/redis.ts`  
+- Logic to push/pop last 10 messages under `chat:{sessionId}`  
+- Integration in `/api/ai/message` to include context
+
+“Ensure Redis connection retries and TTL config for keys.”  
+```
+
+---
+
+### 11. Speech-to-Text Integration
+
+```markdown
+You’re a voice-UI developer.  
+**Vision:** Seamless mic-to-text capture in chat.  
+**Deliverables:**  
+- Mic button in `ChatWindow.tsx`  
+- Whisper JS client setup and recording logic  
+- Transcription callback populates text input  
+- Fallback error handling
+
+“Provide code using browser Web Audio API and Whisper SDK.”  
+```
+
+---
+
+### 12. Text-to-Speech Playback
+
+```markdown
+You’re a full-stack audio engineer.  
+**Vision:** AI responses play as natural voice.  
+**Deliverables:**  
+- Backend ElevenLabs TTS call in `/api/ai/message`  
+- Return audio URL alongside text reply  
+- Frontend `<audio>` element auto-playing URL  
+- Loading and error states
+
+“Include secure handling of API keys and streaming playback.”  
+```
+
+---
+
+### 13. LiveKit Token Endpoint
+
+```markdown
+You’re a real-time systems engineer.  
+**Vision:** Secure LiveKit access tokens per room.  
+**Deliverables:**  
+- POST `/api/livekit/token` accepting `{ roomName, userId? }`  
+- LiveKit SDK integration to generate JWT token  
+- Configurable audio permissions
+
+“Include environment config for LiveKit API key/secret.”  
+```
+
+---
+
+### 14. Audio Room UI
+
+```markdown
+You’re a React real-time integration expert.  
+**Vision:** Intuitive audio room interface.  
+**Deliverables:**  
+- `pages/room/[roomName].tsx` using LiveKit React SDK  
+- Participant grid with mute/unmute controls  
+- Leave room button and reconnect logic  
+- Tailwind styling
+
+“Generate complete page code with hooks for LiveKit events.”  
+```
+
+---
+
+### 15. Database & Prisma Models
+
+```markdown
+You’re a database and ORM specialist.  
+**Vision:** Well-structured schema for core entities.  
+**Deliverables:**  
+- `prisma/schema.prisma` defining `User`, `Session`, `Message`, `Room`  
+- `backend/prisma.ts` for Prisma client instantiation  
+- Seed script `prisma/seed.ts` creating a test user  
+- Migration commands
+
+“Ensure relation fields, indexes, and required constraints are declared.”  
+```
+
+---
+
+Copy and paste these markdown-formatted prompts one by one into Cascade. Each is tuned to yield precise, production-ready outputs—enjoy the vibe-coding journey!
