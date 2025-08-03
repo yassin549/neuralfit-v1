@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  # Services for local development will be defined here.
+  # Example:
+  #
+  # frontend:
+  #   build: ../../apps/frontend
+  #   ports:
+  #     - "3000:3000"
+  #
+  # backend:
+  #   build: ../../apps/backend
+  #   ports:
+  #     - "3001:3001"
+
+networks:
+  default:
+    name: neuralfit_network
