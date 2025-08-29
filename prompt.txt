@@ -1,0 +1,267 @@
+Project name: NeuralFit
+One-line summary: A web-first, privacy-forward therapy-style assistant that preserves a user’s “digital consciousness” (conversations, tastes, personality) to deliver personalized, supportive interactions — built to scale to mobile.
+
+Goal for v0 (what to deliver)
+
+Produce a complete, production-ready v0 specification and design assets for a web beta (no mobile required now). Deliverables must include: UI screens (landing, onboarding, chat, memory panel, settings, admin), component spec, API contract, DB schema, RAG & model integration spec, system prompts, crisis & safety flow, and a deployment/dev scaffold checklist suitable for engineers to implement.
+
+Target users
+
+Adults seeking mental-health support, self-improvement, or reflective conversational assistance (not marketed as a clinical replacement).
+
+Early alpha testers (consented) who want personalized, persistent digital memory.
+
+Admin/clinician users (internal) for oversight and crisis escalation only if user opts in.
+
+Core product principles (constraints)
+
+Privacy-first: explicit consent, export/delete, encryption at rest & in transit.
+
+Transparent: always state model limitations — “supportive assistant, not a clinician.”
+
+Safe: crisis detection + escalation; human-in-loop for sensitive cases.
+
+Portable: web-first stack that ports easily to mobile (React Native / Expo).
+
+Practical beta: minimal infra complexity — fast to implement, easy to demo.
+
+MVP feature list (priority order)
+
+Sign up / login (email + password, optional 2FA) + consent screen.
+
+Chat interface (text; streaming responses) with message history saved.
+
+Persona memory: auto-generated persona summary + editable memory panel.
+
+RAG pipeline: embeddings → top-k retrieval → include persona summary in prompt.
+
+Crisis detection classifier + emergency resource flow.
+
+Export / delete user data endpoints.
+
+Admin dashboard: view flagged events + basic user management.
+
+Import previous conversations (file upload).
+
+Feedback controls (thumbs up/down, inline corrections).
+
+UX / UI requirements (explicit)
+
+Clean, iOS-inspired aesthetic, calm & minimal. Soft rounded cards, subtle motion for microinteractions.
+
+Chat: streaming reply, message role badges, quick actions (save memory, redact, flag).
+
+Memory panel: list of persona bullets (editable), “lock” toggle per item, creation timestamp, provenance (auto vs user).
+
+Onboarding: clear consent page explaining data use and opt-in for human escalation.
+
+Settings: export (JSON), delete account, privacy toggles.
+
+Admin: secure login, audit log view, crisis queue.
+
+Recommended tech stack (beta)
+
+Frontend: Next.js + TypeScript (App Router), Tailwind + shadcn/ui.
+
+Auth & DB: Supabase (or Postgres + NextAuth) — Postgres + pgvector for embeddings.
+
+Backend / ML: FastAPI (Python) for RAG & model microservice.
+
+Model server: vLLM serving mistralai/Mistral-7B-Instruct (GPU) with llama.cpp + GGUF fallback for CPU dev.
+
+Embeddings: sentence-transformers (all-mpnet-base-v2 or all-MiniLM-L6-v2).
+
+Caching & sessions: Redis.
+
+Observability: Sentry + Prometheus/Grafana.
+
+Hosting: Docker images (dev), optionally Kubernetes or managed cloud for scale.
+
+Secrets/KMS: AWS KMS / GCP KMS or Vault.
+
+Data model (short schema snippets)
+
+Provide these in SQL for v0:
+
+Users
+
+users(id uuid PK, email text UNIQUE, password_hash text, created_at timestamptz, consent jsonb)
+
+
+Conversations & Messages
+
+conversations(id uuid PK, user_id uuid FK, title text, created_at timestamptz)
+messages(id uuid PK, conversation_id uuid FK, sender text, content text, metadata jsonb, created_at timestamptz)
+
+
+Persona summaries
+
+persona_summaries(user_id uuid PK FK, summary text, embedding vector, last_updated timestamptz)
+
+
+Vector store table (pgvector)
+
+memories(id uuid PK, user_id uuid FK, text_chunk text, embedding vector, source_message_id uuid, ts timestamptz, tags jsonb)
+
+
+Audit log
+
+access_logs(id uuid PK, user_id uuid, actor text, action text, resource text, created_at timestamptz)
+
+API contract (essential endpoints)
+
+POST /api/auth/signup — {email,password,consent} → user created
+
+POST /api/auth/login — {email,password} → session token
+
+GET /api/user/me — profile + persona summary
+
+POST /api/conversations — create conversation
+
+GET /api/conversations/:id — messages list
+
+POST /api/conversations/:id/message — {user_message} → returns streaming assistant response (RAG + model call)
+
+POST /api/import — upload convo file (JSON/CSV)
+
+GET /api/export — export all user data (authenticated)
+
+DELETE /api/user — delete account & data (authenticated)
+
+POST /api/feedback — rate a message (thumb up/down + optional comment)
+
+GET /api/admin/flags — list crisis/flagged events (admin only)
+
+RAG & prompt engineering (copyable system prompt)
+
+System name: Echo / NeuralFit Assistant
+
+System prompt (template):
+
+You are Echo, NeuralFit’s supportive assistant. Use the Persona Summary and Relevant Memories to respond in the user's voice with a compassionate, non-judgmental, therapeutic-support style. Always include a brief check-in question at the end.
+
+Persona Summary:
+{{persona_summary}}
+
+Relevant Memories:
+{{retrieved_snippets}}
+
+User message:
+{{user_message}}
+
+Rules:
+- Do not diagnose or claim to be a clinician. Use: "I’m an assistant, not a clinician."
+- Keep responses concise (60–160 words) unless user asks for more.
+- Ask one reflective / clarifying question after giving practical steps.
+- If crisis language is detected, do not continue: trigger crisis flow and show resources.
+- Respect tone preference: {{tone}}.
+- Offer 1–3 practical next steps and one short grounding/validation statement.
+
+
+Prompt assembly: include persona_summary (300–600 tokens), top-k retrieved snippets (k=6), then user_message. Re-rank retrievals by semantic similarity + recency boost.
+
+Model & embeddings config (recommended)
+
+Model: Mistral-7B-Instruct served by vLLM (GPU).
+
+Embeddings: all-mpnet-base-v2 (quality) or all-MiniLM-L6-v2 (cost).
+
+Persona summarizer: run after each session — generate concise bullet summary (~6–12 bullets), store text + embedding.
+
+Retrieval: top-k = 6; rerank by score = 0.7 * semantic_sim + 0.3 * recency_boost.
+
+Safety / crisis flow
+
+Run lightweight crisis classifier on each incoming user message (small tuned model + deterministic keywords).
+
+If flagged → immediately respond with: brief validation, emergency resources, local emergency number if available, and offer to connect to an on-call human (only if user previously opted in).
+
+Log event to audit trail and surface to admin/crisis queue.
+
+Never attempt clinical diagnosis in automated flow.
+
+Suggested crisis reply copy (microcopy):
+
+“I’m really glad you told me this. I’m not a clinician, but I’m concerned. If you’re in immediate danger, please call your local emergency number. If you want, I can show crisis resources or connect you to a human.”
+
+Security & privacy (non-negotiable)
+
+TLS everywhere.
+
+Encryption at rest for PHI and embeddings (KMS-managed keys).
+
+Access control & RBAC for admin.
+
+Export & delete endpoints. Deletion = remove messages, vectors, persona summaries, and logs unless legal hold.
+
+Treat embeddings as sensitive; consider encrypting embeddings column.
+
+Maintain audit logs and rotate keys periodically.
+
+Provide clear consent UI explaining data use and opt-outs.
+
+Testing & acceptance criteria (v0)
+
+Auth: sign up/login works; 2FA optional.
+
+Chat: user messages produce coherent assistant responses using RAG and persona.
+
+Memory: persona summary auto-generated and editable; edits reflect in subsequent responses.
+
+Export/Delete: user can export JSON and request deletion; deletion removes vectors and persona.
+
+Crisis: simulated crisis inputs trigger crisis flow and admin flag.
+
+Security: HTTPS + KMS integration + RBAC + logs present.
+
+Performance: streaming responses work; for beta single GPU or quantized CPU acceptable.
+
+Success metrics (beta)
+
+Engagement: DAU/MAU, avg messages per session.
+
+Retention: day-1 and day-7 retention (no numeric targets in this prompt).
+
+Safety: number of crisis flags and resolution path.
+
+Personalization lift: % of responses rated helpful (thumbs up).
+
+Deliverables for v0.app to generate (explicit)
+
+Please output the following artifacts, each complete and copy-paste ready:
+
+UI kit: annotated screens (Landing, Onboarding Consent, Chat, Memory Panel, Settings, Admin Flags). Include component list and state flows.
+
+Component spec: React props + behaviour for each major component (ChatStream, Message, MemoryItem, PersonaEditor, ConsentModal).
+
+API spec: OpenAPI (YAML) for endpoints listed above.
+
+DB schema SQL (Postgres + pgvector) with migrations.
+
+RAG pipeline document: embedding pipeline, retrieval, prompt assembly, and re-ranking logic.
+
+System prompt templates (assistant + crisis + consent microcopy).
+
+Dev scaffold checklist: repo layout, Dockerfiles for frontend, API, model server, and local dev Docker Compose.
+
+Security & compliance checklist: required configs and copy for privacy policy / TOS onboarding text.
+
+QA checklist & example test inputs (functional + safety).
+
+Minimal demo data set (sample users, conversation snippets, persona bullets) for local testing.
+
+Tone & brand guidelines
+
+Voice: calm, supportive, slightly warm.
+
+Microcopy examples:
+
+Onboarding headline: “Welcome to NeuralFit — your private space to talk and reflect.”
+
+Consent snippet: “NeuralFit stores and analyzes your conversations to personalize support. You can export or delete your data at any time.”
+
+Safety banner: “This assistant is supportive and not a substitute for professional care.”
+
+How to instruct v0.app to generate (one-paragraph prompt to paste)
+
+Produce a full v0 specification for NeuralFit (web beta) following the deliverables list above. Use the tech stack and RAG architecture recommended. Export outputs as: (A) annotated Figma-style screens and component spec (mocked as markdown + SVG placeholders), (B) OpenAPI YAML, (C) SQL migrations for Postgres + pgvector, (D) FastAPI model server Dockerfile skeleton with /generate example using vLLM, (E) persona summarizer Python script (sentence-transformers), (F) system prompt templates, (G) privacy/consent UI copy, (H) QA test cases including simulated crisis inputs. Emphasize security, consent, and crisis handling. Provide all code snippets ready to copy.
